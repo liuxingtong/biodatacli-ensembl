@@ -1,0 +1,2 @@
+# runtime for the contract layer and tests (standard library otherwise)
+jsonschema>=4.0

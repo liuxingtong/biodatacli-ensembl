@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biodatacli-ensembl"
+version = "0.3.0"
+description = "Ensembl M1 adapter for SciDataGym: graph service, contract, crosswalk, benchmark"
+requires-python = ">=3.9"
+dependencies = ["jsonschema>=4.0"]
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.2", "pydantic>=2.0"]
+
+[tool.setuptools]
+packages = ["ensembl_adapter"]

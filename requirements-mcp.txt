@@ -1,0 +1,4 @@
+# only needed to serve the MCP tools
+-r requirements.txt
+mcp>=1.2
+pydantic>=2.0
