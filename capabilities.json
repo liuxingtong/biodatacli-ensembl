@@ -56,12 +56,14 @@
     "Ensembl",
     "UniProtKB",
     "PDB",
+    "GO",
+    "Reactome",
+    "KEGG",
+    "EC",
     "HGNC",
     "EntrezGene",
     "MIM",
-    "CCDS",
-    "GO",
-    "Reactome"
+    "CCDS"
   ],
   "key_alignment": {
     "authoritative": [
@@ -69,7 +71,9 @@
       "UniProtKB",
       "PDB",
       "GO",
-      "Reactome"
+      "Reactome",
+      "KEGG",
+      "EC"
     ],
     "supporting": [
       "HGNC",
@@ -78,10 +82,8 @@
       "CCDS"
     ],
     "not_yet": [
-      "KEGG",
       "CL",
-      "UBERON",
-      "EC"
+      "UBERON"
     ]
   }
 }

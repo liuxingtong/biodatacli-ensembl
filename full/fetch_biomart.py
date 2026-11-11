@@ -9,10 +9,9 @@ that one filter line and re-runs the query against the same frozen archive.
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
-import time
 import urllib.parse
-import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QUERIES = os.path.join(ROOT, "queries")
@@ -24,6 +23,8 @@ TARGETS = {
     "uniprot": "biomart_uniprot.xml",
     "gene_xref": "biomart_gene_xref.xml",
     "ccds_mim": "biomart_ccds_mim.xml",
+    "go": "biomart_go.xml",
+    "reactome": "biomart_reactome.xml",
 }
 
 
@@ -34,27 +35,23 @@ def strip_filter(xml: str) -> str:
 
 
 def fetch(xml: str, destination: str, retries: int = 3) -> None:
+    """BioMart rejects non-browser clients, so shell out to curl with a UA."""
     url = BIOMART + "?" + urllib.parse.urlencode({"query": xml})
     partial = destination + ".part"
     for attempt in range(1, retries + 1):
-        try:
-            with urllib.request.urlopen(url, timeout=600) as response:
-                total = 0
-                with open(partial, "wb") as handle:
-                    while True:
-                        block = response.read(1 << 20)
-                        if not block:
-                            break
-                        handle.write(block)
-                        total += len(block)
+        result = subprocess.run(
+            ["curl", "-sS", "-A", "Mozilla/5.0", "--max-time", "3600",
+             "-o", partial, "-w", "%{http_code} %{size_download}", url],
+            capture_output=True, text=True)
+        code, _, size = result.stdout.partition(" ")
+        if result.returncode == 0 and code == "200":
             os.replace(partial, destination)
-            print(f"  {os.path.basename(destination)}: {total:,} bytes")
+            print(f"  {os.path.basename(destination)}: {int(size or 0):,} bytes")
             return
-        except Exception as exc:  # noqa: BLE001 - network flakiness
-            print(f"  attempt {attempt} failed: {exc}", file=sys.stderr)
-            if attempt == retries:
-                raise
-            time.sleep(2 * attempt)
+        print(f"  attempt {attempt} failed: {code or result.stderr[:80]}", file=sys.stderr)
+        if attempt == retries:
+            raise SystemExit(f"biomart fetch failed for {destination}")
+        subprocess.run(["sleep", str(2 * attempt)])
 
 
 def main() -> int:

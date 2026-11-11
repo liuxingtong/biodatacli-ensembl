@@ -1,12 +1,14 @@
 {
-  "build_id": "fca725b18ebb5b54",
-  "edge_count": 33007,
+  "build_id": "0cad253e84557c30",
+  "edge_count": 33609,
   "namespaces": [
     "CCDS",
+    "EC",
     "Ensembl",
     "EntrezGene",
     "GO",
     "HGNC",
+    "KEGG",
     "MIM",
     "PDB",
     "Reactome",
@@ -50,14 +52,32 @@
       "retrieved_at_status": "file_mtime",
       "sha256": "dc44b3d37fb837be9ac4642cc2e7ce91a8a222599ce0e32302f2974fa97d8685"
     },
+    "kegg/enzyme.txt": {
+      "path": "data/raw/kegg/enzyme.txt",
+      "retrieved_at": "2026-11-11T00:25:22Z",
+      "retrieved_at_status": "file_mtime",
+      "sha256": "7585831fd13d20b75ce4fe30c60fe191500c64f64fd9f788f47e7081a77f538d"
+    },
+    "kegg/pathway.txt": {
+      "path": "data/raw/kegg/pathway.txt",
+      "retrieved_at": "2026-11-11T00:25:15Z",
+      "retrieved_at_status": "file_mtime",
+      "sha256": "1c8916ffd3637ddf4219d4918b6cad374b2cec0484d25f992209316f22a4cbdc"
+    },
     "xref_enrichment.json": {
       "path": "data/raw/xref_enrichment.json",
-      "retrieved_at": "2026-11-11T00:23:31Z",
+      "retrieved_at": "2026-11-11T00:29:13Z",
       "retrieved_at_status": "file_mtime",
       "sha256": "6cb12e5a08d2566e054284de934203214cb99df8229e8d3e3f57de607818dc26"
     }
   },
   "relations": {
+    "gene_ec": {
+      "ambiguous_edges": 36,
+      "distinct_sources": 82,
+      "distinct_targets": 65,
+      "edges": 86
+    },
     "gene_entrez": {
       "ambiguous_edges": 15,
       "distinct_sources": 741,
@@ -75,6 +95,12 @@
       "distinct_sources": 1066,
       "distinct_targets": 1063,
       "edges": 1066
+    },
+    "gene_kegg_pathway": {
+      "ambiguous_edges": 510,
+      "distinct_sources": 192,
+      "distinct_targets": 140,
+      "edges": 516
     },
     "gene_mim": {
       "ambiguous_edges": 2,

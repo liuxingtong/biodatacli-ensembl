@@ -23,6 +23,8 @@ UNIPROT_RE = re.compile(
 PDB_RE = re.compile(r"^[0-9][A-Za-z0-9]{3}$")
 ENSEMBL_RE = re.compile(r"^(ENSG|ENST|ENSE|ENSP)([0-9]{6,})(?:\.([0-9]+))?$")
 HGNC_RE = re.compile(r"^HGNC:(\d+)$", re.IGNORECASE)
+KEGG_RE = re.compile(r"^hsa\d{5}$", re.IGNORECASE)
+EC_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 CCDS_RE = re.compile(r"^CCDS\d+", re.IGNORECASE)
 MIM_RE = re.compile(r"^\d{6}$")
 
@@ -37,7 +39,7 @@ def namespace_of(text: str) -> Optional[str]:
             return "Ensembl" if ENSEMBL_RE.match(rest) else None
         if upper in {"UNIPROTKB", "UNIPROT"}:
             return "UniProtKB"
-        if upper in {"PDB", "HGNC", "CCDS", "MIM", "ENTREZGENE", "GO", "REACTOME"}:
+        if upper in {"PDB", "HGNC", "CCDS", "MIM", "ENTREZGENE", "GO", "REACTOME", "KEGG", "EC"}:
             return {"ENTREZGENE": "EntrezGene", "REACTOME": "Reactome"}.get(upper, upper)
         return None
     if UNIPROT_RE.match(text):
@@ -52,6 +54,10 @@ def namespace_of(text: str) -> Optional[str]:
         return "CCDS"
     if text.upper().startswith("R-HSA-"):
         return "Reactome"
+    if KEGG_RE.match(text):
+        return "KEGG"
+    if EC_RE.match(text):
+        return "EC"
     return None
 
 

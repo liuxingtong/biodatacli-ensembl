@@ -229,9 +229,18 @@ def main(argv=None) -> int:
     report.check("crosswalk: a Reactome pathway resolves back to Ensembl genes",
                  any(node["id"].startswith("Ensembl:ENSG") for node in pathway.get("candidates", [])))
 
+    kegg = run("resolve_kegg", lambda: api.resolve(adapter, "hsa04110"))
+    report.check("crosswalk: a KEGG pathway resolves back to Ensembl genes",
+                 any(node["id"].startswith("Ensembl:ENSG") for node in kegg.get("candidates", [])))
+
+    ec = run("resolve_ec", lambda: api.resolve(adapter, "2.4.1.83"))
+    report.check("crosswalk: an EC number resolves back to Ensembl genes",
+                 any(node["id"].startswith("Ensembl:ENSG") for node in ec.get("candidates", [])))
+
     keys = (caps.get("key_alignment") or {})
     report.check("capabilities: authoritative key namespaces are declared",
-                 {"ENSG", "UniProtKB", "PDB", "GO", "Reactome"} <= set(keys.get("authoritative") or []),
+                 {"ENSG", "UniProtKB", "PDB", "GO", "Reactome", "KEGG", "EC"}
+                 <= set(keys.get("authoritative") or []),
                  keys.get("authoritative"))
 
     sifts = run("resolve_pdb", lambda: api.resolve(adapter, PDB))

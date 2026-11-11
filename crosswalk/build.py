@@ -95,7 +95,9 @@ def build(manifest_path: str) -> dict:
         [(f"biomart/{name}", os.path.join(RAW, "biomart", name))
          for name in ("uniprot.tsv", "pdb.tsv", "gene_xref.tsv", "ccds_mim.tsv",
                       "go.tsv", "reactome.tsv")]
-        + [("xref_enrichment.json", os.path.join(RAW, "xref_enrichment.json"))],
+        + [("xref_enrichment.json", os.path.join(RAW, "xref_enrichment.json")),
+           ("kegg/pathway.txt", os.path.join(RAW, "kegg", "pathway.txt")),
+           ("kegg/enzyme.txt", os.path.join(RAW, "kegg", "enzyme.txt"))],
         manifest_path, ROOT,
     )
     release = "116"
@@ -164,6 +166,37 @@ def build(manifest_path: str) -> dict:
             pairs["gene_reactome"].append((
                 ("Ensembl", gene), ("Reactome", pathway),
                 ev("biomart/reactome.tsv", number, "Reactome ID"), {}))
+
+    # --- KEGG: Ensembl gene -> pathway / EC, bridged on Entrez ID ------
+    entrez_to_gene = {}
+    for _number, row in read_tsv("biomart/gene_xref.tsv"):
+        gene_id = row["Gene stable ID"]
+        entrez = row["NCBI gene (formerly Entrezgene) ID"]
+        if gene_id and entrez:
+            entrez_to_gene[entrez] = gene_id
+
+    def read_kegg(rel: str, target_prefix: str, relation: str):
+        path = os.path.join(RAW, rel)
+        if not os.path.exists(path):
+            return
+        key = rel.replace("data/raw/", "").replace("raw/", "")
+        with open(path, encoding="utf-8") as handle:
+            for number, line in enumerate(handle, start=1):
+                parts = line.split()
+                if len(parts) != 2 or not parts[0].startswith("hsa:"):
+                    continue
+                entrez = parts[0].split(":", 1)[1]
+                gene_id = entrez_to_gene.get(entrez)
+                if not gene_id or not parts[1].startswith(target_prefix):
+                    continue
+                target = parts[1].split(":", 1)[1]
+                pairs[relation].append((
+                    ("Ensembl", gene_id), (("KEGG", target) if relation == "gene_kegg_pathway"
+                                           else ("EC", target)),
+                    ev(key, number, "KEGG link"), {"entrez": entrez}))
+
+    read_kegg("kegg/pathway.txt", "path:", "gene_kegg_pathway")
+    read_kegg("kegg/enzyme.txt", "ec:", "gene_ec")
 
     # --- SIFTS: PDB entry <-> UniProt accession -----------------------
     enrichment = load_enrichment()

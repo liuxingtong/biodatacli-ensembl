@@ -251,12 +251,23 @@ asserted it, the file's SHA256, the release and when it was retrieved.
 ```
 protein_uniprot        ENSP ⇄ UniProtKB     1,235 edges
 protein_pdb            ENSP ⇄ PDB          13,444
+gene_go                ENSG ⇄ GO           9,316
+gene_reactome          ENSG ⇄ Reactome     3,604
+transcript_ccds        ENST ⇄ CCDS          3,135
 gene_hgnc              ENSG ⇄ HGNC          1,066
 gene_entrez            ENSG ⇄ EntrezGene      748
+gene_kegg_pathway      ENSG ⇄ KEGG            516
 gene_mim               ENSG ⇄ MIM             458
-transcript_ccds        ENST ⇄ CCDS          3,135
+gene_ec                ENSG ⇄ EC               86
 pdb_uniprot_sifts      PDB  ⇄ UniProtKB         1
 ```
+
+KEGG and EC edges are bridged through the Entrez ID (KEGG's gene key is the
+Entrez number), and each edge records that bridge in `via`.
+
+Authoritative keys covered: ENSG, UniProtKB, PDB, GO, Reactome, KEGG, EC (7 of
+the 9 named in the spec). CL and UBERON are not covered: they need ontology
+files plus expression-based mapping, not a BioMart join.
 
 Fan-out is data, not a bug: 1,012 of the UniProt edges share their accession
 with another chromosome-20 protein, and 2,763 PDB entries map to more than one
