@@ -338,15 +338,16 @@ Measured on this machine (16 GB RAM, 8 cores):
 | 25 per-chromosome builds | 7m27s | `full/parts/` (3.2 GB) |
 | merge | 2m36s | `full/index/ensembl_grch38_r116.sqlite` (3.1 GB) |
 
-Merged graph: **2,413,526 nodes / 6,172,320 edges** — 78,733 genes, 644,292
-transcripts, 370,886 proteins, 1,319,589 exons. 24 duplicate keys collapsed
-(the assembly node repeated per part). Counts are the GFF3's own feature counts:
+Merged graph: **2,622,629 nodes / 6,782,632 edges, 3.26 GB** — 78,733 genes,
+644,292 transcripts, 370,886 proteins, 1,319,589 exons, 209,103 external
+reference nodes. 27,467 duplicate keys collapsed when merging (shared assembly
+node plus every PDB/UniProt entry referenced from more than one chromosome):
+46,147 UniProt edges and 359,037 PDB edges survive the merge. Counts are the GFF3's own feature counts:
 chr20 alone has 16,324 distinct transcript features, all with unique IDs.
 
-Not included yet: cross-database xref edges. The chr20 slice used BioMart exports
-filtered to chromosome 20; the whole-genome exports (`full/fetch_biomart.py`)
-have not been downloaded, so `xref_nodes` is 0 in this build. The crosswalk table
-is likewise still chr20-only.
+The whole-genome BioMart exports (`full/fetch_biomart.py`) feed the rebuild, so
+UniProt/PDB xref edges are present. GO / Reactome / KEGG / EC are **not** graph
+edges in this build — they live in the crosswalk, which is still chr20-only.
 
 ## Visual console
 
