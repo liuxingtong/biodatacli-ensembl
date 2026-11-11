@@ -1,94 +1,96 @@
-"""MCP surface for the Ensembl M1 slice.
+"""MCP server exposing the platform's required and optional tools.
 
-The tools here are deliberately thin: argument validation lives in this file,
-while the contract shape (envelope, null semantics, facts, provenance) lives in
-:mod:`ensembl_adapter.api`.  The conformance runner talks to the same module, so
-what passes locally is what an MCP session returns.
+Required: describe / resolve / search / get_facts
+Optional: search_datasets / get_dataset_metadata / get_access_plan / expand
+
+All business logic lives in :mod:`ensembl_adapter.mcp_contract`; this file only
+adds transport and argument validation.
 """
 
 import argparse
 from contextlib import closing, contextmanager
 import json
 from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
-from . import api
+from . import api, mcp_contract as platform
 from .adapter import EnsemblAdapter
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = ROOT / "data/index/ensembl_chr20_r116.sqlite"
-CONTRACT = api.CONTRACT_VERSION
-Limit = Annotated[int, Field(ge=1, le=1000)]
+Limit = Annotated[int, Field(ge=1, le=200)]
 
 
 def create_server(db_path=DEFAULT_DB, genome_path=None, *, transport="stdio", port=8000):
-    mcp = FastMCP("ensembl-chr20", host="127.0.0.1", port=port,
+    mcp = FastMCP("ensembl", host="127.0.0.1", port=port,
                   stateless_http=True, json_response=True)
     declaration = json.loads((ROOT / "capabilities.json").read_text())
 
-    # One request-scoped read-only connection; refuse an index that drifted
-    # away from the declared snapshot.
     @contextmanager
     def adapter():
         instance = EnsemblAdapter(str(db_path), genome_path)
         with closing(instance.conn):
             meta = instance.meta()
-            if (meta.get("release"), meta.get("assembly"), meta.get("chromosome")) != (
-                    declaration["release"], declaration["assembly"], declaration["scope"]["region"]):
+            if (meta.get("release"), meta.get("assembly")) != (
+                    declaration["release"], declaration["assembly"]):
                 raise ValueError("Index does not match the declared Ensembl snapshot")
             yield instance
 
     @mcp.tool(structured_output=True)
-    def capabilities() -> dict[str, Any]:
-        """Describe this service's coverage, provenance and null semantics."""
+    def describe() -> dict[str, Any]:
+        """Capability declaration: entities, scales, keyspaces, evidence types."""
         with adapter() as a:
-            return {**api.capabilities(a), "tool_contract": CONTRACT, "transport": transport}
+            return platform.describe(a)
 
     @mcp.tool(structured_output=True)
-    def resolve(ref: str | dict, constraints: dict | None = None) -> dict[str, Any]:
-        """Resolve a name or native ID within the declared Ensembl slice."""
+    def resolve(term: str, context: dict | None = None,
+                species: str | None = "human") -> dict[str, Any]:
+        """Free text or alias to canonical key."""
         with adapter() as a:
-            return api.resolve(a, ref, constraints)
+            return platform.resolve(a, term, context, species)
 
     @mcp.tool(structured_output=True)
-    def neighbors(node_id: str, relations: list[str] | None = None,
-                  direction: Literal["in", "out", "both"] = "both",
-                  limit: Limit = 20) -> dict[str, Any]:
-        """Look up typed adjacent objects and the source of each edge."""
+    def search(query: str, filters: dict | None = None, k: Limit = 10) -> dict[str, Any]:
+        """Retrieve facts matching a query, with evidence and source."""
         with adapter() as a:
-            return api.neighbors(a, node_id, relations, direction, limit)
+            return platform.search(a, query, filters, k)
 
     @mcp.tool(structured_output=True)
-    def get_records(ids: Annotated[list[str], Field(min_length=1, max_length=50)],
-                    fields: list[str] | None = None,
-                    region: dict | None = None) -> dict[str, Any]:
-        """Read records and emit self-sourced facts for what was requested."""
+    def get_facts(entity_ids: list[str], fields: list[str] | None = None,
+                  scale: str | None = None) -> dict[str, Any]:
+        """Structured facts for known ids, plus coverage of the request."""
         with adapter() as a:
-            return api.get_records(a, ids, fields, region)
+            return platform.get_facts(a, entity_ids, fields, scale)
 
     @mcp.tool(structured_output=True)
-    def walk(seeds: Annotated[list[str], Field(min_length=1, max_length=20)],
-             relations: list[str] | None = None,
-             max_steps: Annotated[int, Field(ge=0, le=100)] = 6,
-             budget: Limit = 30, rng_seed: int = 20261106) -> dict[str, Any]:
-        """Walk typed relations with deterministic sampling and a per-seed budget."""
+    def search_datasets(query: str = "", filters: dict | None = None,
+                        k: Limit = 10) -> dict[str, Any]:
+        """Dataset catalogue search."""
         with adapter() as a:
-            return api.walk(a, seeds, relations, max_steps, budget, rng_seed)
+            return platform.search_datasets(a, query, filters, k)
 
     @mcp.tool(structured_output=True)
-    def datasets() -> dict[str, Any]:
-        """List the frozen inputs and the index as dataset records."""
+    def get_dataset_metadata(dataset_id: str) -> dict[str, Any]:
+        """Full metadata for one dataset."""
         with adapter() as a:
-            return api.datasets(a)
+            return platform.get_dataset_metadata(a, dataset_id)
 
     @mcp.tool(structured_output=True)
-    def recall(query: str, view: str = "exact", limit: Limit = 20) -> dict[str, Any]:
-        """Recall exact or text candidates in the local index."""
+    def get_access_plan(dataset_id: str, target: str = "on_demand") -> dict[str, Any]:
+        """How to fetch a dataset on demand."""
         with adapter() as a:
-            return api.recall(a, query, view, limit)
+            return platform.get_access_plan(a, dataset_id, target)
+
+    @mcp.tool(structured_output=True)
+    def expand(entity_ids: list[str], key: list[str] | str,
+               max_depth: Annotated[int, Field(ge=1, le=3)] = 1,
+               k: Limit = 50) -> dict[str, Any]:
+        """Graph expansion across scales."""
+        with adapter() as a:
+            return platform.expand(a, entity_ids, key, max_depth, k)
 
     return mcp
 

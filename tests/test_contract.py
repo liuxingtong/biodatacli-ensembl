@@ -175,6 +175,37 @@ class ContractTest(unittest.TestCase):
         self.assertTrue(all(entry["build_id"] for entry in lines))
         self.assertTrue(all(entry["elapsed_ms"] >= 0 for entry in lines))
 
+    def test_platform_tool_shapes(self):
+        from ensembl_adapter import mcp_contract as platform
+        described = platform.describe(self.adapter)
+        self.assertTrue({"adapter_id", "entities", "scales", "keyspaces",
+                         "evidence_types", "search_modes", "license"} <= set(described))
+
+        resolved = platform.resolve(self.adapter, "P31946")
+        first = resolved["candidates"][0]
+        self.assertTrue({"canonical_id", "namespace", "score", "aliases"} <= set(first))
+        self.assertTrue(resolved["ambiguous"])
+
+        found = platform.search(self.adapter, "YWHAB", {"attribute": "gene_location"}, 5)
+        self.assertTrue(found["facts"])
+        self.assertTrue({"entity", "attribute", "value", "evidence_type",
+                         "source", "score"} <= set(found["facts"][0]))
+
+        facts = platform.get_facts(self.adapter, [PROTEIN], ["sequence"], "protein")
+        self.assertTrue(facts["facts"])
+        self.assertIn("missing", facts["coverage"])
+
+    def test_access_plan_and_expand(self):
+        from ensembl_adapter import mcp_contract as platform
+        plan = platform.get_access_plan(self.adapter, "index:ensembl_chr20_r116.sqlite")
+        self.assertEqual(plan["status"], "ok")
+        self.assertTrue(plan["fetch_url_or_cmd"] and plan["format"] and plan["license"])
+        self.assertIsInstance(plan["bytes"], int)
+
+        expanded = platform.expand(self.adapter, [GENE], "has_transcript", 1, 3)
+        self.assertEqual(expanded["status"], "ok")
+        self.assertTrue({"from", "to", "relation", "evidence"} <= set(expanded["edges"][0]))
+
     def test_responses_validate_against_the_schema(self):
         from jsonschema import Draft202012Validator
         with open(os.path.join(ROOT, "contract", "m1.schema.json"), encoding="utf-8") as handle:

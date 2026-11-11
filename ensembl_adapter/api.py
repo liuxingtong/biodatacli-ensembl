@@ -361,6 +361,7 @@ def capabilities(adapter) -> Dict[str, Any]:
             "Ensembl", "UniProtKB", "PDB", "HGNC", "EntrezGene", "MIM", "CCDS"],
         "key_alignment": declaration.get("key_alignment"),
         "scales": ["gene", "transcript", "exon", "protein"],
+        "search_modes": ["identifier", "text"],
         "fact_attributes": sorted(FACT_ATTRIBUTES),
         "dataset_count": len(prov.sources) + 1,
         "trace": {"enabled": trace.enabled(), "env": "ENSEMBL_TRACE"},
@@ -435,6 +436,31 @@ def neighbors(adapter, node_id: str, relations: Optional[Sequence[str]] = None,
     result = adapter.neighbors(node_id, relations, direction, limit)
     result = _normalize_payload(result, adapter.meta(), Provenance(adapter.meta()))
     return envelope(result)
+
+
+@_traced("search_entities")
+def search_entities(adapter, query: str, k: int = 10) -> List[Dict[str, Any]]:
+    """Entity recall behind the platform's search tool: exact first, then text."""
+    query = str(query or "").strip()
+    if not query:
+        return []
+    nodes: List[Dict[str, Any]] = []
+    seen = set()
+    for candidate in api_resolve_candidates(adapter, query, k):
+        if candidate["id"] not in seen:
+            seen.add(candidate["id"])
+            nodes.append(candidate)
+    if len(nodes) < k:
+        for candidate in adapter.recall(query, "text", k).get("candidates", []):
+            if candidate["id"] not in seen:
+                seen.add(candidate["id"])
+                nodes.append(candidate)
+    return nodes[:k]
+
+
+def api_resolve_candidates(adapter, query: str, k: int) -> List[Dict[str, Any]]:
+    result = resolve(adapter, {"text": query}, {"taxon_id": 9606})
+    return result.get("candidates", [])[:k]
 
 
 def validate_region(region: Any) -> Optional[Dict[str, Any]]:

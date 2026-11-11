@@ -139,6 +139,26 @@ a.walk(
 )
 ```
 
+## MCP tools (platform contract)
+
+The server exposes exactly the tools the platform requires, plus the optional
+ones:
+
+| tool | purpose |
+|---|---|
+| `describe` | adapter_id, entities, scales, keyspaces, evidence_types, search_modes, license |
+| `resolve` | free text / alias → `{canonical_id, namespace, score, aliases[]}` |
+| `search` | query → facts (`entity, attribute, value, evidence_type, source, score`) |
+| `get_facts` | ids → `{facts[], coverage{requested, entities_with_facts, missing}}` |
+| `search_datasets` | dataset catalogue (optional) |
+| `get_dataset_metadata` | full dataset record (optional) |
+| `get_access_plan` | `{fetch_url_or_cmd, bytes, format, license}` (optional) |
+| `expand` | `from/to/relation/evidence` edges across scales (optional) |
+
+`ensembl_adapter/mcp_contract.py` holds the logic; `mcp_server.py` only adds
+transport. The internal API (`capabilities / neighbors / get_records / walk /
+recall / datasets`) stays available for the bench, bridge and console.
+
 ## Contract layer (m1.1)
 
 `adapter.py` answers questions about the graph; `api.py` turns those answers

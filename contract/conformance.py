@@ -32,6 +32,7 @@ sys.path.insert(0, ROOT)
 
 from ensembl_adapter import EnsemblAdapter  # noqa: E402
 from ensembl_adapter import api  # noqa: E402
+from ensembl_adapter import mcp_contract as platform  # noqa: E402
 
 DEFAULT_DB = os.path.join(ROOT, "data", "index", "ensembl_chr20_r116.sqlite")
 SCHEMA = os.path.join(ROOT, "contract", "m1.schema.json")
@@ -259,6 +260,51 @@ def main(argv=None) -> int:
     report.check("recall: unimplemented view is na, not an empty list",
                  recall.get("null_status") == "na")
 
+    # ---- platform MCP surface (required + optional) --------------------
+    desc = run("platform_describe", lambda: platform.describe(adapter))
+    report.check("platform describe: capability fields present",
+                 all(key in desc for key in ("adapter_id", "entities", "scales", "keyspaces",
+                                             "evidence_types", "search_modes", "license")),
+                 sorted(desc))
+    report.check("platform describe: keyspaces cover the aligned namespaces",
+                 {"Ensembl", "UniProtKB", "PDB", "GO", "Reactome"} <= set(desc["keyspaces"]))
+
+    pres = run("platform_resolve", lambda: platform.resolve(adapter, "P31946"))
+    hit = (pres.get("candidates") or [{}])[0]
+    report.check("platform resolve: canonical_id + namespace + score + aliases",
+                 {"canonical_id", "namespace", "score", "aliases"} <= set(hit), hit)
+
+    ps = run("platform_search", lambda: platform.search(adapter, "YWHAB", {"attribute": "gene_location"}, 5))
+    fact = (ps.get("facts") or [{}])[0]
+    report.check("platform search: returns facts, not entities",
+                 {"entity", "attribute", "value", "evidence_type", "source", "score"} <= set(fact))
+
+    pf = run("platform_get_facts", lambda: platform.get_facts(
+        adapter, ["Ensembl:ENSP00000300161"], ["sequence"], "protein"))
+    report.check("platform get_facts: facts plus coverage",
+                 pf.get("facts") and {"requested", "entities_with_facts", "missing"} <= set(pf["coverage"]))
+
+    pds = run("platform_search_datasets", lambda: platform.search_datasets(adapter, "gff3"))
+    report.check("platform search_datasets: dataset record shape",
+                 pds.get("total", 0) >= 1
+                 and {"dataset_id", "name", "description", "size", "format", "access"}
+                 <= set(pds["datasets"][0]))
+
+    pmd = run("platform_dataset_metadata", lambda: platform.get_dataset_metadata(
+        adapter, "index:ensembl_chr20_r116.sqlite"))
+    report.check("platform get_dataset_metadata: provenance present",
+                 (pmd.get("dataset") or {}).get("provenance", {}).get("db") == "Ensembl")
+
+    pap = run("platform_access_plan", lambda: platform.get_access_plan(
+        adapter, "index:ensembl_chr20_r116.sqlite"))
+    report.check("platform get_access_plan: fetch command, bytes, format, license",
+                 {"fetch_url_or_cmd", "bytes", "format", "license"} <= set(pap))
+
+    pex = run("platform_expand", lambda: platform.expand(
+        adapter, ["Ensembl:ENSG00000166913"], "has_transcript", 1, 5))
+    report.check("platform expand: from/to/relation/evidence edges",
+                 pex.get("edges") and {"from", "to", "relation", "evidence"} <= set(pex["edges"][0]))
+
     # ---- schema + cross-cutting invariants -----------------------------
     validators = load_validators(args.schema)
     operations = ("capabilities", "resolve", "neighbors", "get_records", "walk", "recall")
@@ -267,6 +313,8 @@ def main(argv=None) -> int:
         return next((op for op in operations if name.startswith(op)), name)
 
     for name, payload in responses.items():
+        if name.startswith("platform_"):
+            continue          # covered by the explicit shape checks above
         validator = validators.get(operation_of(name))
         if validator is None:
             report.check(f"schema: {name} has a schema", False)
