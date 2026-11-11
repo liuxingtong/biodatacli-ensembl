@@ -141,6 +141,40 @@ class ContractTest(unittest.TestCase):
         self.assertTrue(stats["build_id"])
         self.assertIn("protein_uniprot", stats["by_relation"])
 
+    def test_facts_declare_units(self):
+        result = api.get_records(self.adapter, [PROTEIN], ["sequence"],
+                                 {"protein_range": [230, 246]})
+        units = {fact["attribute"]: fact["value"].get("unit") for fact in result["facts"]}
+        self.assertEqual(units.get("protein_sequence"), "aa")
+        self.assertEqual(units.get("protein_position_mapping"), "aa")
+
+    def test_dataset_records(self):
+        result = api.datasets(self.adapter)
+        self.assertGreaterEqual(result["total"], 2)
+        for record in result["datasets"]:
+            self.assertTrue(record["dataset_id"])
+            self.assertIsInstance(record["size"], int)
+            self.assertIn(record["access"]["kind"], {"download", "build", "api"})
+            self.assertTrue(record["provenance"]["db"])
+            self.assertTrue(record["provenance"]["retrieved_at"])
+        index = [r for r in result["datasets"] if r["access"]["kind"] == "build"]
+        self.assertEqual(len(index), 1)
+        self.assertEqual(index[0]["format"], "sqlite")
+
+    def test_trace_records_calls(self):
+        import tempfile
+        path = os.path.join(tempfile.mkdtemp(), "trace.jsonl")
+        os.environ["ENSEMBL_TRACE"] = path
+        try:
+            api.resolve(self.adapter, "YWHAB")
+            api.neighbors(self.adapter, GENE, ["has_transcript"], "out", 2)
+        finally:
+            os.environ.pop("ENSEMBL_TRACE", None)
+        lines = [json.loads(line) for line in open(path, encoding="utf-8")]
+        self.assertEqual([entry["tool"] for entry in lines], ["resolve", "neighbors"])
+        self.assertTrue(all(entry["build_id"] for entry in lines))
+        self.assertTrue(all(entry["elapsed_ms"] >= 0 for entry in lines))
+
     def test_responses_validate_against_the_schema(self):
         from jsonschema import Draft202012Validator
         with open(os.path.join(ROOT, "contract", "m1.schema.json"), encoding="utf-8") as handle:

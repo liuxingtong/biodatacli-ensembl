@@ -51,5 +51,37 @@
     "PDB chains/protein_range are enriched only for 4DNK in this build",
     "structure coordinates are not read by the Ensembl adapter"
   ],
-  "contract_version": "m1.1"
+  "contract_version": "m1.1",
+  "namespaces": [
+    "Ensembl",
+    "UniProtKB",
+    "PDB",
+    "HGNC",
+    "EntrezGene",
+    "MIM",
+    "CCDS",
+    "GO",
+    "Reactome"
+  ],
+  "key_alignment": {
+    "authoritative": [
+      "ENSG",
+      "UniProtKB",
+      "PDB",
+      "GO",
+      "Reactome"
+    ],
+    "supporting": [
+      "HGNC",
+      "EntrezGene",
+      "MIM",
+      "CCDS"
+    ],
+    "not_yet": [
+      "KEGG",
+      "CL",
+      "UBERON",
+      "EC"
+    ]
+  }
 }

@@ -218,6 +218,21 @@ def main(argv=None) -> int:
                                      and hit["evidence"].get("retrieved_at") for hit in edges),
                  edges[0]["evidence"] if edges else None)
 
+    go_hit = run("resolve_go", lambda: api.resolve(adapter, "GO:0005576"))
+    go_reached = [node["id"] for node in go_hit.get("candidates", [])]
+    report.check("crosswalk: a GO term resolves back to Ensembl genes",
+                 any(identifier.startswith("Ensembl:ENSG") for identifier in go_reached),
+                 go_reached[:3])
+
+    pathway = run("resolve_reactome", lambda: api.resolve(adapter, "R-HSA-168256"))
+    report.check("crosswalk: a Reactome pathway resolves back to Ensembl genes",
+                 any(node["id"].startswith("Ensembl:ENSG") for node in pathway.get("candidates", [])))
+
+    keys = (caps.get("key_alignment") or {})
+    report.check("capabilities: authoritative key namespaces are declared",
+                 {"ENSG", "UniProtKB", "PDB", "GO", "Reactome"} <= set(keys.get("authoritative") or []),
+                 keys.get("authoritative"))
+
     sifts = run("resolve_pdb", lambda: api.resolve(adapter, PDB))
     sifts_hit = [hit for hit in sifts.get("crosswalk", [])
                  if hit["relation"] == "pdb_uniprot_sifts"]
@@ -228,6 +243,17 @@ def main(argv=None) -> int:
     report.check("capabilities: the crosswalk is declared, not implied",
                  (caps.get("crosswalk") or {}).get("edges", 0) > 0
                  and bool((caps.get("crosswalk") or {}).get("build_id")))
+
+    ds = run("datasets", lambda: api.datasets(adapter))
+    records = ds.get("datasets") or []
+    report.check("datasets: every frozen input and the index are described",
+                 ds.get("total", 0) >= 2 and all(r.get("dataset_id") for r in records))
+    report.check("datasets: records carry size, format and access",
+                 all(isinstance(r.get("size"), int) and r.get("format")
+                     and (r.get("access") or {}).get("fetch") for r in records))
+    report.check("datasets: provenance names the source or the build",
+                 all((r.get("provenance") or {}).get("db") and
+                     (r.get("provenance") or {}).get("retrieved_at") for r in records))
 
     recall = run("recall", lambda: api.recall(adapter, "YWHAB", "structure"))
     report.check("recall: unimplemented view is na, not an empty list",
@@ -267,6 +293,10 @@ def main(argv=None) -> int:
                  all(source.get("retrieved_at") is not None
                      for name, source in collected
                      if name.startswith("get_records") and source.get("retrieved_at_status") != "not_reported"))
+    unit_facts = [f for f in (responses.get("get_records", {}).get("facts") or [])]
+    report.check("facts: values that have a unit declare it",
+                 any((f.get("value") or {}).get("unit") for f in unit_facts),
+                 [f.get("attribute") for f in unit_facts[:3]])
     report.check("provenance: inputs were retrieved before the index was built",
                  all(source.get("retrieved_at", "") <= (built_at or "")
                      for _, source in collected if source.get("retrieved_at")),

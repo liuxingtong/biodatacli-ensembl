@@ -1,31 +1,3 @@
-# biodatacli-ensembl
-
-Ensembl M1 adapter for SciDataGym — a read-only graph service over human
-GRCh38, with a frozen contract, cross-database key alignment, and a local
-console.
-
-**Status.** chr20 slice is complete and verified (47 contract checks, 32
-regression items, 24 REST reconciliation checks, 21 unit tests, 23 M1-bridge
-checks). Whole-genome build exists as graph structure only: 25 chromosomes,
-2.41M nodes / 6.17M edges / 3.07 GB, **without cross-database xref edges yet**
-(the whole-genome BioMart export has not been fetched).
-
-**Layout.**
-
-| path | contents |
-|---|---|
-| `ensembl_adapter/` | graph builder, query layer, contract layer, crosswalk, MCP server |
-| `contract/` | JSON Schema for the six operations + 47-check conformance suite |
-| `crosswalk/` | cross-database key alignment (20,087 edges) |
-| `bench/` | 32 data-derived regression items, 准/诚/寸 scoring |
-| `bridge/` | adapter for SciDataGym-Demo's M1 interface + 23 checks |
-| `viz/` | local console, six tabs |
-| `full/` | whole-genome pipeline (download, split, per-chromosome build, merge) |
-| `docs/` | progress notes |
-
-Data is not committed: `data/raw`, `data/index`, `full/raw`, `full/parts` and
-`full/index` are rebuilt by the scripts.
-
 # ensembl_proto — offline Ensembl M1 adapter
 
 A dependency-free Python implementation of the SciDataGym **M1 single-database
@@ -215,6 +187,16 @@ Provenance is attached to every fact and to every node/edge source block:
 `download` (recorded by `fetch_data.py` when the bytes arrived), `file_mtime`
 (the bytes' own mtime, used for files that predate per-file stamping), and
 `not_reported` (unknown — never a fabricated date).
+
+Values that have a unit declare it (`protein_sequence` in `aa`, `gene_location`
+in `bp`), matching the `value{type,unit?}` shape of the contract.
+
+`datasets()` returns a `DatasetRecord` for every frozen input plus the index
+itself: `dataset_id`, `name`, `description`, `size`, `format`,
+`access{kind,fetch,read_only}` and `provenance{db,release,sha256,retrieved_at}`.
+
+Every contract call can be traced by pointing `ENSEMBL_TRACE` at a file; each
+line records tool, arguments, status, item count, elapsed time and `build_id`.
 
 Facts are emitted for `protein_sequence`, `protein_position_mapping`,
 `transcript_sequence`, `exon_structure`, `translation`, `gene_location` and

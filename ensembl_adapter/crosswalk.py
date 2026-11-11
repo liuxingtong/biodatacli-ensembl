@@ -37,8 +37,8 @@ def namespace_of(text: str) -> Optional[str]:
             return "Ensembl" if ENSEMBL_RE.match(rest) else None
         if upper in {"UNIPROTKB", "UNIPROT"}:
             return "UniProtKB"
-        if upper in {"PDB", "HGNC", "CCDS", "MIM", "ENTREZGENE"}:
-            return {"ENTREZGENE": "EntrezGene"}.get(upper, upper)
+        if upper in {"PDB", "HGNC", "CCDS", "MIM", "ENTREZGENE", "GO", "REACTOME"}:
+            return {"ENTREZGENE": "EntrezGene", "REACTOME": "Reactome"}.get(upper, upper)
         return None
     if UNIPROT_RE.match(text):
         return "UniProtKB"
@@ -50,6 +50,8 @@ def namespace_of(text: str) -> Optional[str]:
         return "HGNC"
     if CCDS_RE.match(text):
         return "CCDS"
+    if text.upper().startswith("R-HSA-"):
+        return "Reactome"
     return None
 
 
@@ -126,7 +128,11 @@ class Crosswalk:
         namespace = namespace_of(text)
         if not namespace:
             return []
-        ident = str(text).split(":", 1)[1] if ":" in str(text) else str(text)
+        ident = str(text)
+        for prefix in ("Ensembl:", "UniProtKB:", "UniProt:", "PDB:"):
+            if ident.upper().startswith(prefix.upper()):
+                ident = ident[len(prefix):]
+                break
         version = None
         match = ENSEMBL_RE.match(ident)
         if match:

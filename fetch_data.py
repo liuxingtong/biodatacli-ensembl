@@ -77,6 +77,8 @@ BIOMART_QUERIES = [
     ("biomart_gene_xref.xml", "gene_xref.tsv"),
     ("biomart_pdb.xml", "pdb.tsv"),
     ("biomart_ccds_mim.xml", "ccds_mim.tsv"),
+    ("biomart_go.xml", "go.tsv"),
+    ("biomart_reactome.xml", "reactome.tsv"),
 ]
 
 

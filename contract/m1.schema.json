@@ -221,7 +221,10 @@
                 "boolean"
               ]
             },
-            "data": {}
+            "data": {},
+            "unit": {
+              "type": "string"
+            }
           },
           "additionalProperties": true
         },
@@ -653,6 +656,111 @@
         },
         "consistent": {
           "type": "boolean"
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "required": [
+        "dataset_id",
+        "name",
+        "description",
+        "size",
+        "format",
+        "access",
+        "provenance"
+      ],
+      "properties": {
+        "dataset_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "size": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "size_human": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "type": "string"
+        },
+        "access": {
+          "type": "object",
+          "required": [
+            "kind",
+            "fetch"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "download",
+                "build",
+                "api"
+              ]
+            },
+            "fetch": {
+              "type": "string"
+            },
+            "read_only": {
+              "type": "boolean"
+            },
+            "query": {
+              "type": "string"
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "required": [
+            "db",
+            "retrieved_at"
+          ]
+        }
+      }
+    },
+    "datasets": {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "null_status",
+        "truncated",
+        "datasets",
+        "total"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "null_status": {
+          "$ref": "#/$defs/null_status"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dataset"
+          }
         }
       }
     }

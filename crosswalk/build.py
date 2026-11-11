@@ -93,7 +93,8 @@ def classify(n_out: int, n_in: int) -> str:
 def build(manifest_path: str) -> dict:
     provenance = collect_provenance(
         [(f"biomart/{name}", os.path.join(RAW, "biomart", name))
-         for name in ("uniprot.tsv", "pdb.tsv", "gene_xref.tsv", "ccds_mim.tsv")]
+         for name in ("uniprot.tsv", "pdb.tsv", "gene_xref.tsv", "ccds_mim.tsv",
+                      "go.tsv", "reactome.tsv")]
         + [("xref_enrichment.json", os.path.join(RAW, "xref_enrichment.json"))],
         manifest_path, ROOT,
     )
@@ -148,6 +149,21 @@ def build(manifest_path: str) -> dict:
         if gene and row["MIM gene accession"]:
             pairs["gene_mim"].append((("Ensembl", gene), ("MIM", row["MIM gene accession"]),
                                       ev("biomart/ccds_mim.tsv", number, "MIM gene accession"), {}))
+
+    for number, row in read_tsv("biomart/go.tsv"):
+        gene, go_id = row["Gene stable ID"], row["GO term accession"]
+        if gene and go_id:
+            pairs["gene_go"].append((
+                ("Ensembl", gene), ("GO", go_id),
+                ev("biomart/go.tsv", number, "GO term accession"),
+                {"go_name": row["GO term name"], "go_domain": row["GO domain"]}))
+
+    for number, row in read_tsv("biomart/reactome.tsv"):
+        gene, pathway = row["Gene stable ID"], row["Reactome ID"]
+        if gene and pathway:
+            pairs["gene_reactome"].append((
+                ("Ensembl", gene), ("Reactome", pathway),
+                ev("biomart/reactome.tsv", number, "Reactome ID"), {}))
 
     # --- SIFTS: PDB entry <-> UniProt accession -----------------------
     enrichment = load_enrichment()

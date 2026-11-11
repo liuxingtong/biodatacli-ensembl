@@ -79,6 +79,12 @@ def create_server(db_path=DEFAULT_DB, genome_path=None, *, transport="stdio", po
             return api.walk(a, seeds, relations, max_steps, budget, rng_seed)
 
     @mcp.tool(structured_output=True)
+    def datasets() -> dict[str, Any]:
+        """List the frozen inputs and the index as dataset records."""
+        with adapter() as a:
+            return api.datasets(a)
+
+    @mcp.tool(structured_output=True)
     def recall(query: str, view: str = "exact", limit: Limit = 20) -> dict[str, Any]:
         """Recall exact or text candidates in the local index."""
         with adapter() as a:

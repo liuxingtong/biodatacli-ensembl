@@ -18,11 +18,15 @@ Layering: ``adapter.py`` reads the graph; this module shapes answers;
 
 from __future__ import annotations
 
+import functools
 import json
+import os
 import re
 import sqlite3
+import time
 from typing import Any, Dict, List, Optional, Sequence
 
+from . import trace
 from .adapter import TYPE_PRIORITY
 
 CONTRACT_VERSION = "m1.1"
@@ -50,6 +54,21 @@ VERSIONED_STABLE_RE = re.compile(r"(?:Ensembl:)?ENS[A-Z]+\d+\.(\d+)")
 
 MAX_XREF_FACTS = 100
 MAX_CROSSWALK = 20
+
+
+def _traced(tool: str):
+    """Record every contract call when tracing is enabled."""
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(adapter, *args, **kwargs):
+            started = time.perf_counter()
+            result = function(adapter, *args, **kwargs)
+            if trace.enabled():
+                trace.record(tool, {"args": list(args), "kwargs": kwargs}, result,
+                             started, adapter)
+            return result
+        return wrapper
+    return decorator
 
 
 # ----------------------------------------------------------------------
@@ -188,12 +207,16 @@ def _fact_source(record: Dict[str, Any], prov: Provenance, key: str, meta: Dict[
 def _fact(record: Dict[str, Any], attribute: str, value: Any, *, value_type: str,
           evidence_type: str, source: Dict[str, Any], scale: str,
           region: Optional[Dict[str, Any]] = None,
-          derived_from: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+          derived_from: Optional[List[Dict[str, Any]]] = None,
+          unit: Optional[str] = None) -> Dict[str, Any]:
     namespace, _, identifier = str(record["id"]).partition(":")
+    value_block: Dict[str, Any] = {"type": value_type, "data": value}
+    if unit:
+        value_block["unit"] = unit
     fact = {
         "entity": {"id": identifier, "namespace": namespace or "Ensembl"},
         "attribute": attribute,
-        "value": {"type": value_type, "data": value},
+        "value": value_block,
         "evidence_type": evidence_type,
         "source": source,
         "scale": scale,
@@ -208,6 +231,90 @@ def _fact(record: Dict[str, Any], attribute: str, value: Any, *, value_type: str
 # ----------------------------------------------------------------------
 # Operations
 # ----------------------------------------------------------------------
+DATASET_FORMATS = {
+    ".gff3.gz": "gff3+gzip",
+    ".fa.gz": "fasta+gzip",
+    ".fat.gz": "fasta+gzip",
+    ".tsv": "tsv",
+    ".json": "json",
+    ".cif": "mmcif",
+    ".sqlite": "sqlite",
+}
+
+
+def _dataset_format(path: str) -> str:
+    lowered = path.lower()
+    for suffix, label in DATASET_FORMATS.items():
+        if lowered.endswith(suffix):
+            return label
+    return os.path.splitext(lowered)[1].lstrip(".") or "unknown"
+
+
+def _human_bytes(size: int) -> str:
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024 or unit == "GB":
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size} B"
+
+
+@_traced("datasets")
+def datasets(adapter) -> Dict[str, Any]:
+    """DatasetRecord for every frozen input and for the derived index itself."""
+    meta = adapter.meta()
+    prov = Provenance(meta)
+    root = os.path.dirname(os.path.abspath(adapter.db_path))
+    for _ in range(4):                     # data/index/x.sqlite -> repo root
+        if os.path.exists(os.path.join(root, "capabilities.json")):
+            break
+        root = os.path.dirname(root)
+    records: List[Dict[str, Any]] = []
+
+    for key in sorted(prov.sources):
+        entry = prov.sources[key]
+        path = os.path.join(root, entry.get("path") or "")
+        size = os.path.getsize(path) if os.path.exists(path) else None
+        records.append({
+            "dataset_id": f"source:{key}",
+            "name": os.path.basename(entry.get("path") or key),
+            "description": "frozen input for the Ensembl graph build",
+            "size": size,
+            "size_human": _human_bytes(size) if size else None,
+            "format": _dataset_format(key),
+            "access": {"kind": "download", "fetch": "python3 fetch_data.py",
+                       "read_only": True},
+            "provenance": {
+                "db": "Ensembl", "release": meta.get("release"),
+                "path": entry.get("path"), "sha256": entry.get("sha256"),
+                "retrieved_at": entry.get("retrieved_at"),
+                "retrieved_at_status": entry.get("retrieved_at_status"),
+            },
+        })
+
+    index_path = os.path.abspath(adapter.db_path)
+    index_size = os.path.getsize(index_path) if os.path.exists(index_path) else None
+    records.append({
+        "dataset_id": f"index:{os.path.basename(index_path)}",
+        "name": os.path.basename(index_path),
+        "description": "SQLite graph index served by this adapter",
+        "size": index_size,
+        "size_human": _human_bytes(index_size) if index_size else None,
+        "format": "sqlite",
+        "access": {"kind": "build", "read_only": True,
+                   "fetch": "./run_all.sh", "query": "resolve/neighbors/get_records"},
+        "provenance": {
+            "db": "Ensembl", "release": meta.get("release"),
+            "assembly": meta.get("assembly"), "region": meta.get("chromosome"),
+            "build_id": meta.get("build_id"), "built_at": meta.get("built_at"),
+            "retrieved_at": meta.get("built_at"),
+            "retrieved_at_status": "download" if meta.get("built_at") else "not_reported",
+        },
+    })
+
+    return {"ok": True, "status": "ok", "null_status": None, "truncated": False,
+            "datasets": records, "total": len(records)}
+
+
 FACT_ATTRIBUTES = {
     "protein_sequence",
     "protein_position_mapping",
@@ -219,6 +326,7 @@ FACT_ATTRIBUTES = {
 }
 
 
+@_traced("capabilities")
 def capabilities(adapter) -> Dict[str, Any]:
     meta = adapter.meta()
     prov = Provenance(meta)
@@ -249,9 +357,13 @@ def capabilities(adapter) -> Dict[str, Any]:
         "fields": declaration.get("fields", []),
         "region_types": declaration.get("region_types", []),
         "limitations": declaration.get("limitations", []),
-        "namespaces": ["Ensembl", "UniProtKB", "PDB", "HGNC", "EntrezGene", "MIM", "CCDS"],
+        "namespaces": declaration.get("namespaces") or [
+            "Ensembl", "UniProtKB", "PDB", "HGNC", "EntrezGene", "MIM", "CCDS"],
+        "key_alignment": declaration.get("key_alignment"),
         "scales": ["gene", "transcript", "exon", "protein"],
         "fact_attributes": sorted(FACT_ATTRIBUTES),
+        "dataset_count": len(prov.sources) + 1,
+        "trace": {"enabled": trace.enabled(), "env": "ENSEMBL_TRACE"},
         "evidence_types": ["computational", "inferred"],
         "null_semantics": {
             "not_found": "the query ran and nothing in this slice matched",
@@ -266,6 +378,7 @@ def capabilities(adapter) -> Dict[str, Any]:
     }
 
 
+@_traced("resolve")
 def resolve(adapter, ref: Any, constraints: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     result = adapter.resolve(ref, constraints)
     raw = ref if isinstance(ref, str) else (ref or {}).get("text") or (ref or {}).get("id") or ""
@@ -288,7 +401,7 @@ def _expand_crosswalk(adapter, result: Dict[str, Any], text: str) -> Dict[str, A
     reports how many other proteins share that accession instead of silently
     picking one.
     """
-    if result.get("status") not in ANSWERED or not text:
+    if result.get("status") not in ANSWERED + ("not_found",) or not text:
         return result
     hits = adapter.crosswalk_lookup(text)
     if not hits:
@@ -309,11 +422,14 @@ def _expand_crosswalk(adapter, result: Dict[str, Any], text: str) -> Dict[str, A
         node["crosswalk_alternatives"] = hit["alternatives"]
         result["candidates"].append(node)
     result["candidates"].sort(key=lambda node: (TYPE_PRIORITY.get(node["type"], 99), node["id"]))
+    if result["candidates"]:
+        result["status"] = "ok"
     result["crosswalk"] = hits[:MAX_CROSSWALK]
     result["crosswalk_ambiguous"] = any(hit["alternatives"] > 0 for hit in hits)
     return result
 
 
+@_traced("neighbors")
 def neighbors(adapter, node_id: str, relations: Optional[Sequence[str]] = None,
               direction: str = "both", limit: int = 20) -> Dict[str, Any]:
     result = adapter.neighbors(node_id, relations, direction, limit)
@@ -339,6 +455,7 @@ def validate_region(region: Any) -> Optional[Dict[str, Any]]:
     return None
 
 
+@_traced("get_records")
 def get_records(adapter, ids: Sequence[str], fields: Optional[Sequence[str]] = None,
                 region: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     invalid = validate_region(region)
@@ -384,7 +501,7 @@ def _record_facts(record: Dict[str, Any], meta: Dict[str, str], prov: Provenance
             fact_region = {"protein_range": list(region["protein_range"])} if key == "slice" else None
             facts.append(_fact(record, "protein_sequence", value, value_type="string",
                                evidence_type="computational", source=pep, scale="protein",
-                               region=fact_region))
+                               region=fact_region, unit="aa"))
         for pos in (record.get("region") or {}).get("positions", []):
             if pos.get("status") != "ok":
                 continue
@@ -393,7 +510,7 @@ def _record_facts(record: Dict[str, Any], meta: Dict[str, str], prov: Provenance
                 record, "protein_position_mapping", payload, value_type="object",
                 evidence_type="inferred",
                 source={**gff, "field": "derived: CDS + genome"},
-                scale="protein",
+                scale="protein", unit="aa",
                 region={"protein_range": [pos["protein_pos"], pos["protein_pos"]]},
                 derived_from=[
                     {"file": meta.get("source_gff3"), "record_id": node.get("stable_id")},
@@ -420,7 +537,7 @@ def _record_facts(record: Dict[str, Any], meta: Dict[str, str], prov: Provenance
                 source=gff, scale="protein"))
     elif kind == "gene" and node.get("location"):
         facts.append(_fact(record, "gene_location", node["location"], value_type="object",
-                           evidence_type="computational", source=gff, scale="gene"))
+                           evidence_type="computational", source=gff, scale="gene", unit="bp"))
 
     xrefs = (record.get("fields") or {}).get("xrefs") or []
     truncated = len(xrefs) > MAX_XREF_FACTS
@@ -439,6 +556,7 @@ def _record_facts(record: Dict[str, Any], meta: Dict[str, str], prov: Provenance
     return facts, truncated
 
 
+@_traced("walk")
 def walk(adapter, seeds: Sequence[str], relations: Optional[Sequence[str]] = None,
          max_steps: int = 6, budget: int = 30, rng_seed: int = 20261106) -> Dict[str, Any]:
     result = adapter.walk(seeds, relations, max_steps, budget, rng_seed)
@@ -446,6 +564,7 @@ def walk(adapter, seeds: Sequence[str], relations: Optional[Sequence[str]] = Non
     return envelope(result)
 
 
+@_traced("recall")
 def recall(adapter, query: str, view: str = "exact", limit: int = 20) -> Dict[str, Any]:
     result = adapter.recall(query, view, limit)
     result = _normalize_payload(result, adapter.meta(), Provenance(adapter.meta()))
