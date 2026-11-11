@@ -54,6 +54,7 @@ VERSIONED_STABLE_RE = re.compile(r"(?:Ensembl:)?ENS[A-Z]+\d+\.(\d+)")
 
 MAX_XREF_FACTS = 100
 MAX_CROSSWALK = 20
+MAX_CANDIDATES = 50
 
 
 def _traced(tool: str):
@@ -425,6 +426,9 @@ def _expand_crosswalk(adapter, result: Dict[str, Any], text: str) -> Dict[str, A
     result["candidates"].sort(key=lambda node: (TYPE_PRIORITY.get(node["type"], 99), node["id"]))
     if result["candidates"]:
         result["status"] = "ok"
+    if len(result["candidates"]) > MAX_CANDIDATES:
+        result["candidates"] = result["candidates"][:MAX_CANDIDATES]
+        result["truncated"] = True
     result["crosswalk"] = hits[:MAX_CROSSWALK]
     result["crosswalk_ambiguous"] = any(hit["alternatives"] > 0 for hit in hits)
     return result

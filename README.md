@@ -346,8 +346,18 @@ node plus every PDB/UniProt entry referenced from more than one chromosome):
 chr20 alone has 16,324 distinct transcript features, all with unique IDs.
 
 The whole-genome BioMart exports (`full/fetch_biomart.py`) feed the rebuild, so
-UniProt/PDB xref edges are present. GO / Reactome / KEGG / EC are **not** graph
-edges in this build — they live in the crosswalk, which is still chr20-only.
+UniProt/PDB xref edges are present. GO / Reactome / KEGG / EC are not graph
+edges; they come from the crosswalk, and the whole-genome one is built next to
+the index:
+
+```bash
+python3 crosswalk/build.py --biomart full/biomart   --out full/index/crosswalk.jsonl.gz --stats full/index/crosswalk_stats.json
+```
+
+1,123,188 edges (GO 289k, PDB 394k, Reactome 146k, CCDS 115k, UniProt 51k, KEGG
+20k, EC 3.9k). The adapter prefers a crosswalk that sits next to the database.
+Loading it costs ~35 s and ~1.1M in-memory edges; candidate lists are capped at
+50 with `truncated: true`.
 
 ## Visual console
 

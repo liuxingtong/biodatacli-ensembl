@@ -97,7 +97,9 @@ class EnsemblAdapter:
 
     def _locate_crosswalk(self) -> Optional[str]:
         root = os.path.dirname(os.path.dirname(os.path.abspath(self.db_path)))
+        db_dir = os.path.dirname(os.path.abspath(self.db_path))
         candidates = [
+            os.path.join(db_dir, "crosswalk.jsonl.gz"),          # co-located with this index
             os.path.join(root, "crosswalk", "crosswalk.jsonl.gz"),
             os.path.join(os.getcwd(), "crosswalk", "crosswalk.jsonl.gz"),
         ]

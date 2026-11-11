@@ -53,9 +53,14 @@ def sha256_file(path: str) -> str:
     return digest.hexdigest()
 
 
+BIOMART_DIR = os.path.join(RAW, "biomart")
+
+
 def read_tsv(rel: str):
     """Yield ``(line_number, row)`` with the header on line 1."""
     path = os.path.join(RAW, rel)
+    if rel.startswith("biomart/"):
+        path = os.path.join(BIOMART_DIR, rel.split("/", 1)[1])
     with open(path, encoding="utf-8") as handle:
         header = handle.readline().rstrip("\n").split("\t")
         for number, line in enumerate(handle, start=2):
@@ -90,9 +95,10 @@ def classify(n_out: int, n_in: int) -> str:
     return "n:m"
 
 
-def build(manifest_path: str) -> dict:
+def build(manifest_path: str, biomart_dir: str = os.path.join(RAW, "biomart"),
+          out_path: str = DEFAULT_OUT) -> dict:
     provenance = collect_provenance(
-        [(f"biomart/{name}", os.path.join(RAW, "biomart", name))
+        [(f"biomart/{name}", os.path.join(biomart_dir, name))
          for name in ("uniprot.tsv", "pdb.tsv", "gene_xref.tsv", "ccds_mim.tsv",
                       "go.tsv", "reactome.tsv")]
         + [("xref_enrichment.json", os.path.join(RAW, "xref_enrichment.json")),
@@ -262,8 +268,8 @@ def build(manifest_path: str) -> dict:
         digest.update(f"{key}:{provenance[key]['sha256']}\n".encode())
     build_id = digest.hexdigest()[:16]
 
-    os.makedirs(OUT_DIR, exist_ok=True)
-    with gzip.open(DEFAULT_OUT, "wt", encoding="utf-8", compresslevel=9) as handle:
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with gzip.open(out_path, "wt", encoding="utf-8", compresslevel=9) as handle:
         for edge in edges:
             handle.write(json.dumps(edge, sort_keys=True, ensure_ascii=False) + "\n")
 
@@ -275,7 +281,7 @@ def build(manifest_path: str) -> dict:
         "namespaces": sorted({e["from"]["namespace"] for e in edges} |
                              {e["to"]["namespace"] for e in edges}),
         "provenance": provenance,
-        "output": os.path.relpath(DEFAULT_OUT, ROOT),
+        "output": os.path.relpath(out_path, ROOT),
     }
 
 
@@ -283,9 +289,13 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", default=os.path.join(ROOT, "data", "manifest.json"))
     parser.add_argument("--stats", default=DEFAULT_STATS)
+    parser.add_argument("--biomart", default=os.path.join(RAW, "biomart"))
+    parser.add_argument("--out", default=DEFAULT_OUT)
     args = parser.parse_args(argv)
 
-    stats = build(args.manifest)
+    global BIOMART_DIR
+    BIOMART_DIR = args.biomart
+    stats = build(args.manifest, args.biomart, args.out)
     with open(args.stats, "w", encoding="utf-8") as handle:
         json.dump(stats, handle, indent=2, sort_keys=True, ensure_ascii=False)
     print(json.dumps({key: stats[key] for key in ("build_id", "edge_count", "namespaces")},
