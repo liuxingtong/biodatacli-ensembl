@@ -1,0 +1,55 @@
+{
+  "database": "Ensembl",
+  "release": "116",
+  "assembly": "GRCh38.p14",
+  "schema_version": "m1-contract-v1",
+  "scope": {
+    "species": "homo_sapiens",
+    "taxon_id": 9606,
+    "region": "20",
+    "description": "human chromosome 20, GRCh38 primary assembly"
+  },
+  "node_types": [
+    "Assembly",
+    "Region",
+    "Gene",
+    "Transcript",
+    "Exon",
+    "Protein",
+    "CodingSequence",
+    "StructureEntry"
+  ],
+  "relations": [
+    "has_region",
+    "contains",
+    "has_transcript",
+    "has_exon",
+    "has_translation",
+    "uniprot_xref",
+    "pdb_xref",
+    "hgnc_xref",
+    "entrez_xref",
+    "mim_xref",
+    "ccds_xref"
+  ],
+  "fields": [
+    "attributes",
+    "sequence",
+    "exons",
+    "translation",
+    "xrefs",
+    "protein_mapping",
+    "coverage"
+  ],
+  "region_types": [
+    "protein_range",
+    "genomic_range"
+  ],
+  "limitations": [
+    "only human chromosome 20 is indexed",
+    "no patch, alt, PAR_Y, variation, regulation or compara nodes",
+    "PDB chains/protein_range are enriched only for 4DNK in this build",
+    "structure coordinates are not read by the Ensembl adapter"
+  ],
+  "contract_version": "m1.1"
+}

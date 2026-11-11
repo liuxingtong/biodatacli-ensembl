@@ -1,0 +1,88 @@
+{
+  "assembly": "GRCh38.p14",
+  "files": {
+    "data/raw/4DNK.cif": {
+      "retrieved_at": "2026-11-06T12:27:18Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "7c59a95dee5dda0a3bf9deb64b0625796f9b9a8b1dd862cfdab81998d8692882",
+      "size": 793656,
+      "url": "https://files.rcsb.org/download/4DNK.cif"
+    },
+    "data/raw/4dnk.xml.gz": {
+      "retrieved_at": "2026-11-06T12:27:37Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "7d73fd92da20e9c8479bbca6dbe29951e498fd0a2841837701b114e38cea6f53",
+      "size": 88320,
+      "url": "https://ftp.ebi.ac.uk/pub/databases/msd/sifts/xml/4dnk.xml.gz"
+    },
+    "data/raw/Homo_sapiens.GRCh38.115.chromosome.20.gff3.gz": {
+      "retrieved_at": "2026-11-06T12:27:04Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "b63f9a67f18f14a149fe08a254b66d68d05629a0e7ad2bc6c1212a443e7adf24",
+      "size": 2019220,
+      "url": "https://ftp.ensembl.org/pub/release-115/gff3/homo_sapiens/Homo_sapiens.GRCh38.115.chromosome.20.gff3.gz"
+    },
+    "data/raw/Homo_sapiens.GRCh38.116.chromosome.20.gff3.gz": {
+      "retrieved_at": "2026-11-06T12:22:48Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "237c78190a6c2ebae1e895abd440f85e95253cb6bc29c481c48f3ab0e0aff990",
+      "size": 2672058,
+      "url": "https://ftp.ensembl.org/pub/release-116/gff3/homo_sapiens/Homo_sapiens.GRCh38.116.chromosome.20.gff3.gz"
+    },
+    "data/raw/Homo_sapiens.GRCh38.dna.chromosome.20.fa.gz": {
+      "retrieved_at": "2026-11-06T12:25:10Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "1b8cd336cc563d36595fc4148956fbafceb6441f6d8003ff2a78d7e31765d10c",
+      "size": 18833053,
+      "url": "https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.20.fa.gz"
+    },
+    "data/raw/Homo_sapiens.GRCh38.pep.all.fa.gz": {
+      "retrieved_at": "2026-11-06T12:28:00Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "9b43da92651b35814597af6a8b18f500b768679a49fa4678224f384917ce7668",
+      "size": 23319936,
+      "url": "https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/pep/Homo_sapiens.GRCh38.pep.all.fa.gz"
+    },
+    "data/raw/biomart/ccds_mim.tsv": {
+      "query": "biomart_ccds_mim.xml",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "5d9f891fd9c9580fcb46e5f9ed1b7ad5c2485dd73af414782e3db9bc95f8d015",
+      "size": 644494,
+      "url": "https://jun2026.archive.ensembl.org/biomart/martservice"
+    },
+    "data/raw/biomart/gene_xref.tsv": {
+      "query": "biomart_gene_xref.xml",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "c3bddb389b3886a8a57b8429ff4aa932c55bc515436b315efe4d4ec2c5f608fa",
+      "size": 50670,
+      "url": "https://jun2026.archive.ensembl.org/biomart/martservice"
+    },
+    "data/raw/biomart/pdb.tsv": {
+      "query": "biomart_pdb.xml",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "291f3ba5240be931be9b27691a5d3bc4c298bd1cd24dea164ea48717593900b1",
+      "size": 1154181,
+      "url": "https://jun2026.archive.ensembl.org/biomart/martservice"
+    },
+    "data/raw/biomart/uniprot.tsv": {
+      "query": "biomart_uniprot.xml",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "dc44b3d37fb837be9ac4642cc2e7ce91a8a222599ce0e32302f2974fa97d8685",
+      "size": 477185,
+      "url": "https://jun2026.archive.ensembl.org/biomart/martservice"
+    },
+    "data/raw/uniprot_P31946.fasta": {
+      "retrieved_at": "2026-11-06T12:37:43Z",
+      "retrieved_at_source": "file_mtime",
+      "sha256": "bc671afbe4590bd6e764bb274a6796dcb2c37b7584ad069d2003b4d3d8e3d18a",
+      "size": 343,
+      "url": "https://rest.uniprot.org/uniprotkb/P31946.fasta"
+    }
+  },
+  "release": "116",
+  "updated_at": "2026-11-10T13:55:48+0800"
+}

@@ -1,0 +1,91 @@
+{
+  "build_id": "ce47f83713e50e35",
+  "edge_count": 20087,
+  "namespaces": [
+    "CCDS",
+    "Ensembl",
+    "EntrezGene",
+    "HGNC",
+    "MIM",
+    "PDB",
+    "UniProtKB"
+  ],
+  "output": "crosswalk/crosswalk.jsonl.gz",
+  "provenance": {
+    "biomart/ccds_mim.tsv": {
+      "path": "data/raw/biomart/ccds_mim.tsv",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_status": "file_mtime",
+      "sha256": "5d9f891fd9c9580fcb46e5f9ed1b7ad5c2485dd73af414782e3db9bc95f8d015"
+    },
+    "biomart/gene_xref.tsv": {
+      "path": "data/raw/biomart/gene_xref.tsv",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_status": "file_mtime",
+      "sha256": "c3bddb389b3886a8a57b8429ff4aa932c55bc515436b315efe4d4ec2c5f608fa"
+    },
+    "biomart/pdb.tsv": {
+      "path": "data/raw/biomart/pdb.tsv",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_status": "file_mtime",
+      "sha256": "291f3ba5240be931be9b27691a5d3bc4c298bd1cd24dea164ea48717593900b1"
+    },
+    "biomart/uniprot.tsv": {
+      "path": "data/raw/biomart/uniprot.tsv",
+      "retrieved_at": "2026-11-06T12:33:17Z",
+      "retrieved_at_status": "file_mtime",
+      "sha256": "dc44b3d37fb837be9ac4642cc2e7ce91a8a222599ce0e32302f2974fa97d8685"
+    },
+    "xref_enrichment.json": {
+      "path": "data/raw/xref_enrichment.json",
+      "retrieved_at": "2026-11-10T05:55:48Z",
+      "retrieved_at_status": "file_mtime",
+      "sha256": "6cb12e5a08d2566e054284de934203214cb99df8229e8d3e3f57de607818dc26"
+    }
+  },
+  "relations": {
+    "gene_entrez": {
+      "ambiguous_edges": 15,
+      "distinct_sources": 741,
+      "distinct_targets": 747,
+      "edges": 748
+    },
+    "gene_hgnc": {
+      "ambiguous_edges": 6,
+      "distinct_sources": 1066,
+      "distinct_targets": 1063,
+      "edges": 1066
+    },
+    "gene_mim": {
+      "ambiguous_edges": 2,
+      "distinct_sources": 458,
+      "distinct_targets": 457,
+      "edges": 458
+    },
+    "pdb_uniprot_sifts": {
+      "ambiguous_edges": 0,
+      "distinct_sources": 1,
+      "distinct_targets": 1,
+      "edges": 1
+    },
+    "protein_pdb": {
+      "ambiguous_edges": 13431,
+      "distinct_sources": 573,
+      "distinct_targets": 3337,
+      "edges": 13444
+    },
+    "protein_uniprot": {
+      "ambiguous_edges": 1012,
+      "distinct_sources": 1235,
+      "distinct_targets": 525,
+      "edges": 1235
+    },
+    "transcript_ccds": {
+      "ambiguous_edges": 2746,
+      "distinct_sources": 3135,
+      "distinct_targets": 916,
+      "edges": 3135
+    }
+  },
+  "release": "116"
+}

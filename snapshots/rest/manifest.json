@@ -1,0 +1,119 @@
+{
+  "base": "https://rest.ensembl.org",
+  "endpoints": {
+    "error_versioned_id": {
+      "bytes": 45,
+      "content_type": "application/json",
+      "sha256": "0c9cde8573c91ee38e535d2f3c16f262d703f882576894cb68117b48ac95630a",
+      "status": 400,
+      "url": "https://rest.ensembl.org/lookup/id/ENSG00000166913.15"
+    },
+    "homology_ywhab": {
+      "bytes": 265587,
+      "content_type": "application/json",
+      "sha256": "dbb1f93aefe8a57585925c761ffc59e915bbffc89967ad4e482eb3e800117d8a",
+      "status": 200,
+      "url": "https://rest.ensembl.org/homology/id/homo_sapiens/ENSG00000166913?type=orthologues"
+    },
+    "info_assembly_human": {
+      "bytes": 12640,
+      "content_type": "application/json",
+      "sha256": "defe8a9d41e74c271aa788e24cd3efea4b3fe15f8a5d8f0b812a65487e7a918c",
+      "status": 200,
+      "url": "https://rest.ensembl.org/info/assembly/homo_sapiens"
+    },
+    "info_data": {
+      "bytes": 18,
+      "content_type": "application/json",
+      "sha256": "86e87c46ae1a424702676493d024d0508ce60f6c951b0b2803ce10269e09c20c",
+      "status": 200,
+      "url": "https://rest.ensembl.org/info/data"
+    },
+    "info_software": {
+      "bytes": 15,
+      "content_type": "application/json",
+      "sha256": "2e56831cafd56ff6fa16980aff0e14aaaa928a385465fb48896d2c77ca095374",
+      "status": 200,
+      "url": "https://rest.ensembl.org/info/software"
+    },
+    "lookup_symbol_ywhab": {
+      "bytes": 486,
+      "content_type": "application/json",
+      "sha256": "fcb7cb2c342207b78f55c67b1dc89ca6d81eda5a927d26715a2234e24a62d4ea",
+      "status": 200,
+      "url": "https://rest.ensembl.org/lookup/symbol/homo_sapiens/YWHAB"
+    },
+    "lookup_ywhab_expand": {
+      "bytes": 71762,
+      "content_type": "application/json",
+      "sha256": "5f64537fa8063d0dfcb401177be8c8e58277739aabac2d426f6cac20aaa46770",
+      "status": 200,
+      "url": "https://rest.ensembl.org/lookup/id/ENSG00000166913?expand=1"
+    },
+    "overlap_regulatory_ywhab": {
+      "bytes": 1274,
+      "content_type": "application/json",
+      "sha256": "c428fc4ed8dbc0da004842d1ce80f8a2c2d7effe2f902e8cd7f0fc17262de1b5",
+      "status": 200,
+      "url": "https://rest.ensembl.org/overlap/region/human/20:44885676-44908715?feature=regulatory"
+    },
+    "overlap_variation_ywhab": {
+      "bytes": 2081796,
+      "content_type": "application/json",
+      "sha256": "9d988d2679ab6de09c52c831aa99539411ad9899aa90d6599f2177215b9a8bf0",
+      "status": 200,
+      "url": "https://rest.ensembl.org/overlap/region/human/20:44885676-44908715?feature=variation"
+    },
+    "overlap_ywhab": {
+      "bytes": 132592,
+      "content_type": "application/json",
+      "sha256": "a4b3b6431a2cc53c5da8a8300ebbc7c18b9b6f0083f46bccf0760da2be2f1b13",
+      "status": 200,
+      "url": "https://rest.ensembl.org/overlap/region/homo_sapiens/20:44885676-44908715?feature=gene;feature=transcript;feature=exon;feature=cds"
+    },
+    "sequence_cdna_alt": {
+      "bytes": 3427,
+      "content_type": "application/json",
+      "sha256": "78380461846ab98beaea881e19c88359604b0baa3d0830868d155abe53216230",
+      "status": 200,
+      "url": "https://rest.ensembl.org/sequence/id/ENST00000372839?type=cdna"
+    },
+    "sequence_cdna_canonical": {
+      "bytes": 3120,
+      "content_type": "application/json",
+      "sha256": "e7a1153e57eba908e4c3fb920e81e1be8abf4f3b04bc85513e8c7f1925c286d6",
+      "status": 200,
+      "url": "https://rest.ensembl.org/sequence/id/ENST00000353703?type=cdna"
+    },
+    "sequence_protein_canonical": {
+      "bytes": 350,
+      "content_type": "application/json",
+      "sha256": "923fb27b37447ccfbe58065580f4cb0cef84348aa6d2bd7f15ff74cda3d32dcc",
+      "status": 200,
+      "url": "https://rest.ensembl.org/sequence/id/ENSP00000300161?type=protein"
+    },
+    "sequence_protein_short": {
+      "bytes": 204,
+      "content_type": "application/json",
+      "sha256": "c34a94d29ada6b63c58ab9ff00a63697af2188f99f06a7c93f74e8752c06b56a",
+      "status": 200,
+      "url": "https://rest.ensembl.org/sequence/id/ENST00000428262?type=protein"
+    },
+    "vep_rs1042522": {
+      "bytes": 54343,
+      "content_type": "application/json",
+      "sha256": "90b432b211a4b0d58e7ec8f64959ee19454ff6ca63562fc34bb2867cf89c10db",
+      "status": 200,
+      "url": "https://rest.ensembl.org/vep/human/id/rs1042522"
+    },
+    "xrefs_ensp_p31946": {
+      "bytes": 26705,
+      "content_type": "application/json",
+      "sha256": "b7e45f5440fc88162adc115d5cd15fc8e12292460a227155f7d739b12c19030e",
+      "status": 200,
+      "url": "https://rest.ensembl.org/xrefs/id/ENSP00000300161"
+    }
+  },
+  "fetched_at": "2026-11-06T20:44:37+0800",
+  "release": 116
+}

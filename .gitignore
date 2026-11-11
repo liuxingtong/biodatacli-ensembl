@@ -1,0 +1,14 @@
+# generated artefacts — rebuild with ./run_all.sh or ./full/run_full.sh
+data/raw/
+data/index/
+full/raw/
+full/split/
+full/parts/
+full/index/
+runs/
+*.sqlite
+*.sqlite-journal
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

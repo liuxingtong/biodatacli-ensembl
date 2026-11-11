@@ -1,0 +1,660 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:scidatagym:ensembl:m1:1.1",
+  "title": "Ensembl M1 contract (m1.1)",
+  "description": "Response shapes for the six M1 operations. null_status is the only way an adapter is allowed to say it does not know something.",
+  "$defs": {
+    "null_status": {
+      "description": "not_found: the query ran and nothing matched; not_reported: the entity exists but the source asserts no value; na: outside this adapter's declared scope; access_failed: the read failed. null means the answer is present.",
+      "enum": [
+        "not_found",
+        "not_reported",
+        "na",
+        "access_failed",
+        null
+      ]
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "partial",
+        "not_found",
+        "unsupported",
+        "invalid_ref",
+        "invalid_region",
+        "invalid_direction",
+        "error"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "retrieved_at",
+        "retrieved_at_status"
+      ],
+      "properties": {
+        "retrieved_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "retrieved_at_status": {
+          "enum": [
+            "download",
+            "file_mtime",
+            "not_reported"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "db",
+        "id",
+        "version",
+        "retrieved_at",
+        "retrieved_at_status"
+      ],
+      "properties": {
+        "db": {
+          "type": "string"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entity_version": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "retrieved_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "retrieved_at_status": {
+          "enum": [
+            "download",
+            "file_mtime",
+            "not_reported"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "locator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "assembly": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "build_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]+:"
+        },
+        "type": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "additionalProperties": true
+    },
+    "edge": {
+      "type": "object",
+      "required": [
+        "from",
+        "relation",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "relation": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "fact": {
+      "type": "object",
+      "required": [
+        "entity",
+        "attribute",
+        "value",
+        "evidence_type",
+        "source",
+        "scale"
+      ],
+      "properties": {
+        "entity": {
+          "type": "object",
+          "required": [
+            "id",
+            "namespace"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "attribute": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object",
+          "required": [
+            "type",
+            "data"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "string",
+                "number",
+                "object",
+                "array",
+                "boolean"
+              ]
+            },
+            "data": {}
+          },
+          "additionalProperties": true
+        },
+        "evidence_type": {
+          "enum": [
+            "experimental",
+            "computational",
+            "literature",
+            "inferred"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "scale": {
+          "type": "string"
+        },
+        "region": {
+          "type": "object"
+        },
+        "derived_from": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "resolve": {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "null_status",
+        "truncated",
+        "candidates"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "null_status": {
+          "$ref": "#/$defs/null_status"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "crosswalk": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "anchor",
+              "other",
+              "relation",
+              "evidence",
+              "alternatives"
+            ],
+            "properties": {
+              "anchor": {
+                "type": "object",
+                "required": [
+                  "namespace",
+                  "id"
+                ]
+              },
+              "other": {
+                "type": "object",
+                "required": [
+                  "namespace",
+                  "id"
+                ]
+              },
+              "relation": {
+                "type": "string"
+              },
+              "cardinality": {
+                "type": "string"
+              },
+              "alternatives": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "evidence": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "sha256",
+                  "retrieved_at"
+                ]
+              },
+              "via": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "crosswalk_ambiguous": {
+          "type": "boolean"
+        }
+      }
+    },
+    "neighbors": {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "null_status",
+        "truncated",
+        "items",
+        "total"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "null_status": {
+          "$ref": "#/$defs/null_status"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "node",
+              "edge",
+              "source",
+              "direction"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/node"
+              },
+              "edge": {
+                "$ref": "#/$defs/edge"
+              },
+              "source": {
+                "$ref": "#/$defs/source"
+              },
+              "direction": {
+                "enum": [
+                  "in",
+                  "out"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "get_records": {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "null_status",
+        "truncated",
+        "records",
+        "facts"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "null_status": {
+          "$ref": "#/$defs/null_status"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "facts_truncated": {
+          "type": "boolean"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/$defs/status"
+              },
+              "null_status": {
+                "$ref": "#/$defs/null_status"
+              },
+              "type": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fact"
+          }
+        }
+      }
+    },
+    "walk": {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "null_status",
+        "truncated",
+        "walks",
+        "rng_seed"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "null_status": {
+          "$ref": "#/$defs/null_status"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "rng_seed": {
+          "type": "integer"
+        },
+        "walks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "seed",
+              "status",
+              "path",
+              "visited"
+            ],
+            "properties": {
+              "seed": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/$defs/status"
+              },
+              "stopped": {
+                "type": "string"
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "from",
+                    "relation",
+                    "to"
+                  ],
+                  "properties": {
+                    "from": {
+                      "type": "string"
+                    },
+                    "relation": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "$ref": "#/$defs/source"
+                    }
+                  }
+                }
+              },
+              "visited": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/node"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "recall": {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "null_status",
+        "truncated",
+        "candidates"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "null_status": {
+          "$ref": "#/$defs/null_status"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "contract_version",
+        "database",
+        "release",
+        "scope",
+        "relations",
+        "fields",
+        "snapshot",
+        "null_semantics",
+        "evidence_types"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "contract_version": {
+          "type": "string"
+        },
+        "database": {
+          "type": "string"
+        },
+        "release": {
+          "type": "string"
+        },
+        "assembly": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "object"
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fact_attributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "null_semantics": {
+          "type": "object",
+          "required": [
+            "not_found",
+            "not_reported",
+            "na",
+            "access_failed"
+          ]
+        },
+        "snapshot": {
+          "type": "object",
+          "required": [
+            "release",
+            "assembly",
+            "build_id",
+            "built_at",
+            "contract_version"
+          ]
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/provenance"
+          }
+        },
+        "consistent": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

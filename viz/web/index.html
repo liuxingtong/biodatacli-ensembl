@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SciDataGym · Ensembl chr20 控制台</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <div>
+      <h1>SciDataGym <span id="scope-title">· Ensembl</span></h1>
+      <p id="meta">加载中…</p>
+    </div>
+  </div>
+
+  <form id="search" class="search" autocomplete="off">
+    <input id="q" placeholder="基因符号 / ENSG / ENSP / UniProt / PDB，如 YWHAB、P31946、4DNK" aria-label="搜索">
+    <select id="type" aria-label="类型">
+      <option value="">任意类型</option>
+      <option value="Gene">Gene</option>
+      <option value="Transcript">Transcript</option>
+      <option value="Protein">Protein</option>
+    </select>
+    <button type="submit">检索</button>
+  </form>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-view="explore" class="active">图谱探索</button>
+  <button data-view="seq">序列与坐标</button>
+  <button data-view="cross">跨库对齐</button>
+  <button data-view="bridge">M1 桥接</button>
+  <button data-view="health">数据库体检</button>
+  <button data-view="eval">评测面板</button>
+</nav>
+
+<main>
+  <section id="view-explore" class="view active">
+    <div class="split">
+      <div class="panel graph-panel">
+        <div class="panel-head">
+          <h2>邻域图</h2>
+          <div class="chips" id="graph-hint">搜索后按关系展开，点节点继续下钻</div>
+        </div>
+        <div class="chips" id="quick-seeds" style="margin:-4px 0 8px"></div>
+        <svg id="graph" viewBox="0 0 900 620" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+      <aside class="panel detail" id="detail">
+        <div class="empty">
+          <h3>从一个实体开始</h3>
+          <p>试试 <span id="seeds"></span></p>
+          <h4>查不到时会怎么回答</h4>
+          <ul class="null-list">
+            <li><code>not_found</code> 检索到了，但没有匹配</li>
+            <li><code>not_reported</code> 实体存在，来源没给这个值</li>
+            <li><code>na</code> 超出本切片范围（如小鼠）</li>
+            <li><code>access_failed</code> 读取失败，不作任何断言</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="view-seq" class="view">
+    <form id="seq-form" class="toolbar">
+      <label>快速选择 <select id="seq-pick"><option value="">— 从列表选一个 —</option></select></label>
+      <label>蛋白 <input id="seq-id" value="Ensembl:ENSP00000300161"></label>
+      <label>起点 <input id="seq-start" type="number" value="230" min="1"></label>
+      <label>终点 <input id="seq-end" type="number" value="246" min="1"></label>
+      <button type="submit">取序列</button>
+      <button type="button" class="ghost" id="seq-demo">换一段 1–40</button>
+    </form>
+    <div id="seq-out" class="panel"></div>
+
+    <form id="iso-form" class="toolbar" style="margin-top:18px">
+      <label>按基因看全部异构体 <input id="iso-gene" value="YWHAB" size="10"></label>
+      <label>窗口 <input id="iso-start" type="number" value="230" min="1"></label>
+      <span class="hint">–</span>
+      <input id="iso-end" type="number" value="246" min="1">
+      <button type="submit">比对覆盖</button>
+      <span class="hint">同一个基因的 40 个转录本，哪些真的覆盖这段</span>
+    </form>
+    <div id="iso-out"></div>
+  </section>
+
+  <section id="view-cross" class="view">
+    <form id="cross-form" class="toolbar">
+      <label>标识符 <input id="cross-q" value="P31946" size="18"></label>
+      <button type="submit">查对照</button>
+      <span class="hint">试试 4DNK、ENSP00000300161、HGNC:12849</span>
+    </form>
+    <div id="cross-out" class="panel"></div>
+  </section>
+
+  <section id="view-bridge" class="view">
+    <div id="bridge-out"></div>
+  </section>
+
+  <section id="view-health" class="view">
+    <div id="health-out"></div>
+  </section>
+
+  <section id="view-eval" class="view">
+    <div id="eval-out"></div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
