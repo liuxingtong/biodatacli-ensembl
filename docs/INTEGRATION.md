@@ -7,7 +7,7 @@
 
 ```bash
 pip install -r requirements.txt          # 契约层与测试只需要 jsonschema
-pip install -r requirements-mcp.txt      # 需要对外提供 MCP 时才装
+pip install -r requirements-mcp.txt      # MCP 服务；注意 mcp 需 <2，v2 改了 FastMCP 的导入路径
 
 # 数据：下载 + 建图 + 全量检查（约 1 小时，主要耗在下载）
 python3 fetch_data.py            # 8 个冻结输入，约 48 MB
@@ -68,7 +68,8 @@ python3 contract/conformance.py     # 70 项：schema、null 四态、溯源、�
 python3 bench/run.py                # 32 题，准/诚/寸
 python3 bridge/smoke.py             # 23 项，按 SciDataGym-Demo 的 M3 调用方式
 python3 -m unittest discover -s tests   # 26 项
-python3 acceptance_mcp.py           # 走真实 MCP 会话，校验 8 个工具
+python3 acceptance_mcp.py --db <构建好的索引>   # 走真实 MCP 会话，校验 8 个工具
+# 已在本机验证：PASS: 8 platform tools, 8 calls（python 3.12 + mcp 1.x）
 ```
 
 bench 的 32 题全部由冻结数据推导（每题记录 `source_of_truth`），定位是回归与口径固定，

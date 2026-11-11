@@ -233,7 +233,7 @@ Machine-readable shapes live in [`contract/m1.schema.json`](contract/m1.schema.j
 [`contract/conformance.py`](contract/conformance.py):
 
 ```bash
-python3 contract/conformance.py            # 40 checks, exit 1 on failure
+python3 contract/conformance.py            # 70 checks, exit 1 on failure
 python3 contract/conformance.py --out runs/conformance.json
 ```
 
